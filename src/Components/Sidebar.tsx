@@ -6,9 +6,10 @@ import { formalDateJa } from "../utils/formalTime"
 interface sidebarProps {
   notes: Note[]
   activeId: string | null
+  handleSelect: (id: string | null) => void
 }
 
-export function Sidebar({ notes, activeId }: sidebarProps) {
+export function Sidebar({ notes, activeId, handleSelect }: sidebarProps) {
   return (
     <aside className="sidebar">
 
@@ -43,30 +44,22 @@ export function Sidebar({ notes, activeId }: sidebarProps) {
           最近のノート
         </div>
 
-        {/* アクティブなノート（選択中） */}
-        <div className="note-item active">
-          <div className="note-stripe" style={{ background: '#F2A7B0' }} />
-          <div className="note-title">JLPT N3 — 文法まとめ</div>
-          <div className="note-preview">〜ているところ：進行中の動作...</div>
-          <div className="note-meta">
-            <span className="note-date">5月22日</span>
-            <span className="note-tag-mini color-pink" style={{ background: '#FFF0F2', borderColor: '#F2A7B0', color: '#C4596A' }}>
-              日本語
-            </span>
-          </div>
-        </div>
-
         {/* 通常のノート */}
         {notes.map(item => (
-          <div className="note-item" key={item.id}>
+          <div
+            key={item.id}
+            className={`note-item ${item.id === activeId ? 'active' : ''}`}
+            onClick={() => handleSelect(item.id)}
+          >
             <div className="note-stripe" style={{ background: item.stripeColor }} />
-            <div className="note-title">{item.title}</div>
-            <div className="note-preview">{item.content}</div>
+            <div className="note-title">{item.title || '無題のノート'}</div>
+            <div className="note-preview">{item.content.slice(0, 50) || '空のノート'}</div>
             <div className="note-meta">
               <span className="note-date">{formalDateJa(item.updatedAt)}</span>
-              <span className={`note-tag-mini color-${item.tags[0].color}`}>
-                {item.tags[0].label}
-              </span>
+              {item.tags.length > 0 && (
+                <span className={`note-tag-mini color-${item.tags[0].color}`}>
+                  {item.tags[0].label}</span>
+              )}
             </div>
           </div>
         ))}

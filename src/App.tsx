@@ -46,11 +46,18 @@ export default function App() {
   const [activeId, setActiveId] = useState<string | null>(SEED[0].id)
 
   const activeNote = notes.find(item => item.id === activeId) ?? null
+
+  // Sidebar からノートを選択したときの処理
+  function handleSelect(id: string | null) {
+    setActiveId(id)
+  }
+
   return (
     <div className="app">
       <Sidebar
         notes={notes}
         activeId={activeId}
+        handleSelect={handleSelect}
       />
       <Topbar />
       <Editor />
