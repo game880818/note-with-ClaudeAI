@@ -1,8 +1,14 @@
 // ── Day 1: Sidebar コンポーネント（静的構造のみ）────────────────────────────
 // TODO Day2: props を受け取って notes を動的に表示する
 // TODO Day2: 検索・タグ絞り込みのロジックを追加する
+import type { Note } from "../Types"
+import { formalDateJa } from "../utils/formalTime"
+interface sidebarProps {
+  notes: Note[]
+  activeId: string | null
+}
 
-export function Sidebar() {
+export function Sidebar({ notes, activeId }: sidebarProps) {
   return (
     <aside className="sidebar">
 
@@ -51,41 +57,20 @@ export function Sidebar() {
         </div>
 
         {/* 通常のノート */}
-        <div className="note-item">
-          <div className="note-stripe" style={{ background: '#8FD0BA' }} />
-          <div className="note-title">React hooks まとめ</div>
-          <div className="note-preview">useState, useEffect, useCallback...</div>
-          <div className="note-meta">
-            <span className="note-date">5月21日</span>
-            <span className="note-tag-mini" style={{ background: '#EEF8F4', borderColor: '#8FD0BA', color: '#3B8870' }}>
-              技術
-            </span>
+        {notes.map(item => (
+          <div className="note-item" key={item.id}>
+            <div className="note-stripe" style={{ background: item.stripeColor }} />
+            <div className="note-title">{item.title}</div>
+            <div className="note-preview">{item.content}</div>
+            <div className="note-meta">
+              <span className="note-date">{formalDateJa(item.updatedAt)}</span>
+              <span className={`note-tag-mini color-${item.tags[0].color}`}>
+                {item.tags[0].label}
+              </span>
+            </div>
           </div>
-        </div>
+        ))}
 
-        <div className="note-item">
-          <div className="note-stripe" style={{ background: '#97BEF0' }} />
-          <div className="note-title">面接準備メモ</div>
-          <div className="note-preview">なぜこの技術を選んだか...</div>
-          <div className="note-meta">
-            <span className="note-date">5月20日</span>
-            <span className="note-tag-mini" style={{ background: '#EDF4FF', borderColor: '#97BEF0', color: '#3A6FB5' }}>
-              就活
-            </span>
-          </div>
-        </div>
-
-        <div className="note-item">
-          <div className="note-stripe" style={{ background: '#F5D97A' }} />
-          <div className="note-title">単語帳 — N3語彙</div>
-          <div className="note-preview">財布、電車、約束...</div>
-          <div className="note-meta">
-            <span className="note-date">5月19日</span>
-            <span className="note-tag-mini" style={{ background: '#FFFAE8', borderColor: '#F5D97A', color: '#9A7E2A' }}>
-              単語
-            </span>
-          </div>
-        </div>
       </div>
 
       {/* ── フッター ── */}

@@ -33,7 +33,7 @@ const SEED: Note[] = [
   {
     id: '2',
     title: 'React hooks まとめ',
-    content: 'useState・useEffect・useCallback',
+    content: 'useEffect・useState・useCallback',
     tags: [{ label: '技術', color: 'mint' }],
     stripeColor: '#8FD0BA',
     createdAt: new Date().toISOString(),
@@ -48,7 +48,10 @@ export default function App() {
   const activeNote = notes.find(item => item.id === activeId) ?? null
   return (
     <div className="app">
-      <Sidebar />
+      <Sidebar
+        notes={notes}
+        activeId={activeId}
+      />
       <Topbar />
       <Editor />
       <AiPanel />
