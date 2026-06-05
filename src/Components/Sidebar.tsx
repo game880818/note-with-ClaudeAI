@@ -2,50 +2,82 @@
 // TODO Day2: props を受け取って notes を動的に表示する
 // TODO Day2: 検索・タグ絞り込みのロジックを追加する
 import type { Note } from "../Types"
+import { useState } from 'react'
 import { formalDateJa } from "../utils/formalTime"
 interface sidebarProps {
   notes: Note[]
   activeId: string | null
-  handleSelect: (id: string | null) => void
+  handleSelect: (id: string) => void
+  handleNew: () => void
 }
 
-export function Sidebar({ notes, activeId, handleSelect }: sidebarProps) {
+export function Sidebar({ notes, activeId, handleSelect, handleNew }: sidebarProps) {
+  const [searchText, setSearchText] = useState<string>('')
+  const [activeTag, setActiveTag] = useState<string | null>(null)
+
+  // 全てのタグを取得　（重複を排除）
+  // 1. 全てのタグを展開して 2. Map で重複を排除する 3.values() で値を取得する 4. Array.from() でイテレータという特殊な状態を配列に変換する
+  const allTags = Array.from(
+    new Map(
+      notes.flatMap(note => note.tags).map(tag => [tag.label, tag])
+    ).values()
+  )
+
+  // 検索 + タグで絞り込む
+  const filteredNotes = notes.filter(note => {
+    const currentSearch = !searchText || note.title.includes(searchText) || note.content.includes(searchText)
+    const currentTag = !activeTag || note.tags.some(tag => tag.label === activeTag)
+    return currentSearch && currentTag
+  })
   return (
     <aside className="sidebar">
 
-      {/* ── ブランドロゴ ── */}
+      {/* ── ロゴ ── */}
       <div className="sidebar-top">
         <div className="brand">
           <div className="brand-dot" />
           <span className="brand-name">note.ai ✿</span>
         </div>
 
-        {/* 検索ボックス（見た目のみ・Day2で機能追加） */}
+        {/* 検索ボックス */}
         <div className="search-box">
           <span>🔍</span>
-          <span>検索する...</span>
+          <input
+            placeholder="検索する..."
+            value={searchText}
+            onChange={e => setSearchText(e.target.value)}
+          ></input>
         </div>
 
-        {/* タグフィルター（見た目のみ・Day2で機能追加） */}
+        {/* タグフィルター */}
         <div className="section-label">タグ · Tags</div>
+        {/* タグフィルターのボタン null === 全て */}
         <div className="tag-filter">
-          <span className="tag-chip color-pink">すべて</span>
-          <span className="tag-chip color-pink">日本語</span>
-          <span className="tag-chip color-mint">JLPT</span>
-          <span className="tag-chip color-blue">文法</span>
-          <span className="tag-chip color-lemon">単語</span>
+          <span
+            className={`tag-chip ${!activeTag ? 'color-pink' : ''}`}
+            onClick={() => setActiveTag(null)}
+          >すべて</span>
+          {/* タグフィルターのボタン 具体のタグ */}
+          {allTags.map(tag => (
+            <span
+              key={tag.label}
+              className={`tag-chip ${activeTag === tag.label ? `color-${tag.color}` : ''}`}
+              onClick={() => setActiveTag(activeTag === tag.label ? null : tag.label)}
+            >
+              {tag.label}
+            </span>
+          ))}
         </div>
       </div>
 
       {/* ── ノートリスト（ダミーデータ） ── */}
-      {/* TODO Day2: notes.map() で動的に描画する */}
       <div className="note-list">
         <div className="section-label" style={{ padding: '6px 2px 4px' }}>
           最近のノート
         </div>
 
         {/* 通常のノート */}
-        {notes.map(item => (
+        {filteredNotes.map(item => (
           <div
             key={item.id}
             className={`note-item ${item.id === activeId ? 'active' : ''}`}
@@ -67,9 +99,8 @@ export function Sidebar({ notes, activeId, handleSelect }: sidebarProps) {
       </div>
 
       {/* ── フッター ── */}
-      {/* TODO Day2: onClick で新規ノートを作成する */}
       <div className="sidebar-foot">
-        <button className="btn-new">
+        <button className="btn-new" onClick={handleNew}>
           ＋ 新しいノートを作成
         </button>
       </div>
