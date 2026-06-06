@@ -16,26 +16,23 @@ export function Editor({ note, onChange }: EditorProps) {
     <div className="editor-wrap">
 
       {/* ── タグ編集行 ── */}
-      {/* TODO Day2: note.tags.map() で動的に描画する */}
       <div className="tags-row">
         <span className="tags-row-label">タグ :</span>
 
-        <span className="edit-tag color-pink">
-          日本語
-          {/* TODO Day2: クリックでタグを削除できるようにする */}
-          <button className="tag-remove-btn">×</button>
-        </span>
+        {note?.tags?.map(tag => (
+          <span className={`edit-tag ${tag.color ? `color-${tag.color}` : ''}`} key={tag.label}>
+            {tag.label}
+            {/* TODO Day2: クリックでタグを削除できるようにする */}
+            <button className="tag-remove-btn">×</button>
+          </span>
+        ))}
 
-        <span className="edit-tag color-mint">
-          JLPT
-          <button className="tag-remove-btn">×</button>
-        </span>
 
         {/* TODO Day2: Enter キーでタグを追加する input */}
         <input
           className="tag-add-input"
+          name="tag"
           placeholder="+ 追加..."
-          readOnly
         />
       </div>
 
@@ -43,9 +40,10 @@ export function Editor({ note, onChange }: EditorProps) {
       {/* TODO Day2: value={note.title} onChange={...} を追加する */}
       <input
         className="title-input"
+        name="title"
+        value={note?.title}
+        onChange={(e) => onChange({ title: e.target.value })}
         placeholder="タイトルを入力..."
-        defaultValue="JLPT N3 — 文法まとめ"
-        readOnly
       />
 
       {/* タイトル下のアクセントライン */}
@@ -56,11 +54,10 @@ export function Editor({ note, onChange }: EditorProps) {
       <div className="content-scroll">
         <textarea
           className="content-textarea"
+          name="content"
+          value={note?.content}
+          onChange={(e) => onChange({ content: e.target.value })}
           placeholder="ここにメモを入力してください..."
-          defaultValue={
-            '【進行形の表現】\n〜ているところ — 動作が進行中であることを表す。\n例：今、勉強しているところです。\n\n【完了・後悔】\n〜てしまう — 完了、または残念な気持ちを表す。\n例：財布を忘れてしまった。\n\n【反事実・仮定】\n〜ばよかった — 後悔を表す表現。\n例：もっと早く起きればよかった。'
-          }
-          readOnly
         />
       </div>
 
