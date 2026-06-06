@@ -1,7 +1,4 @@
-// ── Day 1: Topbar コンポーネント（静的構造のみ）────────────────────────────
-// TODO Day2: props で title・updatedAt を受け取る
 // TODO Day3: AI パネルの開閉ボタンを機能させる
-
 import { formalFullTimeJa } from "../utils/formalTime"
 
 interface topbarProps {

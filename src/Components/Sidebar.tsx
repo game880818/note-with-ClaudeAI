@@ -1,6 +1,3 @@
-// ── Day 1: Sidebar コンポーネント（静的構造のみ）────────────────────────────
-// TODO Day2: props を受け取って notes を動的に表示する
-// TODO Day2: 検索・タグ絞り込みのロジックを追加する
 import type { Note } from "../Types"
 import { useState } from 'react'
 import { formalDateJa } from "../utils/formalTime"

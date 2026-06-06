@@ -17,7 +17,7 @@ import { Sidebar } from './Components/Sidebar'
 import { Topbar } from './Components/Topbar'
 import { Editor } from './Components/Editor'
 import { AiPanel } from './Components/AiPanel'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 // 画面確認用のダミーデータ
 const SEED: Note[] = [
@@ -34,7 +34,7 @@ const SEED: Note[] = [
     id: '2',
     title: 'React hooks まとめ',
     content: 'useEffect・useState・useCallback',
-    tags: [{ label: '技術', color: 'mint' }, { label: '日本語', color: 'pink' }],
+    tags: [{ label: '技術', color: 'mint' }, { label: 'ウェブ', color: 'pink' }],
     stripeColor: '#8FD0BA',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -42,10 +42,24 @@ const SEED: Note[] = [
 ]
 
 export default function App() {
-  const [notes, setNotes] = useState<Note[]>(SEED)
-  const [activeId, setActiveId] = useState<string | null>(SEED[0].id ?? null)
+  const [notes, setNotes] = useState<Note[]>(() => {
+    const saved = localStorage.getItem('notes')
+    // 選択しているノートを返す　
+    return saved ? JSON.parse(saved) as Note[] : SEED
+  })
+  const [activeId, setActiveId] = useState<string | null>(() => {
+    const saved = localStorage.getItem('notes')
+    const savedNotes = saved ? JSON.parse(saved) as Note[] : SEED
+    // arrayが空の場合は null を返す
+    return savedNotes[0]?.id ?? null
+  })
 
   const activeNote = notes.find(item => item.id === activeId) ?? null
+
+  // notes を localStorage に保存 & notes が変化したとき再実行
+  useEffect(() => {
+    localStorage.setItem('notes', JSON.stringify(notes))
+  }, [notes])
 
   // 新しいノートを作成するときの処理
   function handleNew() {

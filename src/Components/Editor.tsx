@@ -1,7 +1,3 @@
-// ── Day 1: Editor コンポーネント（静的構造のみ）────────────────────────────
-// TODO Day2: props で note・onChange を受け取る
-// TODO Day2: タグの追加・削除ロジックを実装する
-// TODO Day2: 字数カウントを動的にする
 import { Note } from '../Types';
 import { useState } from 'react';
 
