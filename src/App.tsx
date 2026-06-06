@@ -17,7 +17,7 @@ import { Sidebar } from './Components/Sidebar'
 import { Topbar } from './Components/Topbar'
 import { Editor } from './Components/Editor'
 import { AiPanel } from './Components/AiPanel'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 
 // 画面確認用のダミーデータ
 const SEED: Note[] = [
@@ -34,7 +34,7 @@ const SEED: Note[] = [
     id: '2',
     title: 'React hooks まとめ',
     content: 'useEffect・useState・useCallback',
-    tags: [{ label: '技術', color: 'mint' }],
+    tags: [{ label: '技術', color: 'mint' }, { label: '日本語', color: 'pink' }],
     stripeColor: '#8FD0BA',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -43,12 +43,46 @@ const SEED: Note[] = [
 
 export default function App() {
   const [notes, setNotes] = useState<Note[]>(SEED)
-  const [activeId, setActiveId] = useState<string | null>(SEED[0].id)
+  const [activeId, setActiveId] = useState<string | null>(SEED[0].id ?? null)
 
   const activeNote = notes.find(item => item.id === activeId) ?? null
 
+  // 新しいノートを作成するときの処理
+  function handleNew() {
+    const newNote = {
+      id: Date.now().toString(),
+      title: '',
+      content: '',
+      tags: [],
+      stripeColor: '#F2A7B0',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+    setNotes([newNote, ...notes])
+    setActiveId(newNote.id)
+  }
+
+  function handleDelete(id: string) {
+    // 確認ダイアログを出す
+    if (!window.confirm('このノートを削除しますか？')) return
+    // 削除
+    const newNotes = notes.filter(note => note.id !== id)
+    setNotes(newNotes)
+    setActiveId(newNotes[0]?.id ?? null)
+  }
+
+  // ノートを更新するときの処理
+  // useCallback で memo化する activeId が変化したときのみ再実行
+  const handleChange = useCallback((field: Partial<Note>) => {
+    setNotes((prevNotes) => {
+      // 選択しているノートを探し出し、更新
+      const newNotes = prevNotes.map(note => note.id === activeId ? { ...note, ...field, updatedAt: new Date().toISOString() } : note)
+      return newNotes
+    })
+  }, [activeId])
+
   // Sidebar からノートを選択したときの処理
-  function handleSelect(id: string | null) {
+  function handleSelect(id: string) {
     setActiveId(id)
   }
 
@@ -58,9 +92,34 @@ export default function App() {
         notes={notes}
         activeId={activeId}
         handleSelect={handleSelect}
+        handleNew={handleNew}
       />
-      <Topbar />
-      <Editor />
+      <Topbar
+        title={activeNote?.title ?? ''}
+        updatedAt={activeNote?.updatedAt ?? ''}
+        onDelete={() => activeId && handleDelete(activeId)}
+        hasNote={activeNote !== null}
+      />
+
+      {/* Editor or empty state */}
+      {activeNote ? (
+        <Editor
+          note={activeNote}
+          onChange={handleChange}
+        />
+      ) : (
+        <div className="editor-wrap">
+          <div className="no-note">
+            <div className="no-note-flower">✿</div>
+            <p className="no-note-text">
+              ノートを選択するか<br />新しいノートを作成してください
+            </p>
+            <button className="btn-new" style={{ width: 180 }} onClick={handleNew}>
+              ＋ 新しいノートを作成
+            </button>
+          </div>
+        </div>
+      )}
       <AiPanel />
     </div>
   )

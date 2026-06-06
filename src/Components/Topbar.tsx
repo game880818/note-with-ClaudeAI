@@ -6,12 +6,12 @@ import { formalFullTimeJa } from "../utils/formalTime"
 
 interface topbarProps {
   title: string
-  updateAt: string
+  updatedAt: string
   onDelete: () => void
   hasNote: boolean
 }
 
-export function Topbar({ title, updateAt, onDelete, hasNote }: topbarProps) {
+export function Topbar({ title, updatedAt, onDelete, hasNote }: topbarProps) {
   return (
     <header className="topbar">
 
@@ -19,19 +19,20 @@ export function Topbar({ title, updateAt, onDelete, hasNote }: topbarProps) {
         {title || '無題のノート'}{title ? ' ✍︎' : ''}
       </span>
 
-      <span className="topbar-date">{formalFullTimeJa(updateAt)}</span>
+      <span className="topbar-date">{formalFullTimeJa(updatedAt)}</span>
 
       {/* AI パネル開閉ボタン（Day3で onClick を追加） */}
-      <button className="icon-btn active" aria-label="AIパネル">
+      <button className="icon-btn active" aria-label="AIパネル" title="AIアシスタント">
         ✦
       </button>
 
-      {/* 削除ボタン（Day2で onClick を追加） */}
+      {/* ノートがある場合のみ表示する */}
       {hasNote &&
         <button
           className="icon-btn"
           aria-label="削除"
           onClick={onDelete}
+          title="削除"
         >
           🗑
         </button>}

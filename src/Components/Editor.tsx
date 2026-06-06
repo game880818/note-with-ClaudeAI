@@ -2,8 +2,16 @@
 // TODO Day2: props で note・onChange を受け取る
 // TODO Day2: タグの追加・削除ロジックを実装する
 // TODO Day2: 字数カウントを動的にする
+import { Note } from '../Types';
 
-export function Editor() {
+interface EditorProps {
+  note: Note | null
+  // Partial<Note> は Note の一部を更新できるようにする
+  // 例えば、title を更新する場合は、{ title: '新しいタイトル' } を渡す
+  onChange: (field: Partial<Note>) => void
+}
+
+export function Editor({ note, onChange }: EditorProps) {
   return (
     <div className="editor-wrap">
 
