@@ -4,11 +4,13 @@ import { formalFullTimeJa } from "../utils/formalTime"
 interface topbarProps {
   title: string
   updatedAt: string
+  aiOpen: boolean
+  onAiToggle: () => void
   onDelete: () => void
   hasNote: boolean
 }
 
-export function Topbar({ title, updatedAt, onDelete, hasNote }: topbarProps) {
+export function Topbar({ title, updatedAt, aiOpen, onAiToggle, onDelete, hasNote }: topbarProps) {
   return (
     <header className="topbar">
 
@@ -18,8 +20,8 @@ export function Topbar({ title, updatedAt, onDelete, hasNote }: topbarProps) {
 
       <span className="topbar-date">{formalFullTimeJa(updatedAt)}</span>
 
-      {/* AI パネル開閉ボタン（Day3で onClick を追加） */}
-      <button className="icon-btn active" aria-label="AIパネル" title="AIアシスタント">
+      {/* AI パネル開閉ボタン*/}
+      <button className={aiOpen ? 'icon-btn active' : 'icon-btn'} aria-label="AIパネル" title="AIアシスタント" onClick={onAiToggle}>
         ✦
       </button>
 
