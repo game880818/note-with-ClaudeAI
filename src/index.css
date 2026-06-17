@@ -375,6 +375,38 @@ body {
   color: var(--rose-dark);
 }
 
+.topbar-auth-btn {
+  padding: 5px 13px;
+  border-radius: 20px;
+  border: 1px solid var(--border-mid);
+  background: transparent;
+  color: var(--ink-3);
+  font-size: 11.5px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.topbar-auth-btn:hover {
+  background: var(--paper-hover);
+  color: var(--ink);
+  border-color: var(--ink-4);
+}
+
+/* ログインボタンだけ rose カラー */
+.topbar-auth-btn.login {
+  border-color: var(--rose);
+  color: var(--rose-dark);
+  background: var(--rose-light);
+}
+
+.topbar-auth-btn.login:hover {
+  background: var(--rose);
+  color: white;
+  border-color: var(--rose);
+}
+
 /* ══ EDITOR ═══════════════════════════════════════════════════════════════════ */
 .editor-wrap {
   grid-area: editor;
