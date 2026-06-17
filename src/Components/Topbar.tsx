@@ -1,6 +1,7 @@
 // TODO Day3: AI パネルの開閉ボタンを機能させる
 import { formalFullTimeJa } from "../utils/formalTime"
 import supabase from "../../lib/supabase"
+import type { Session } from "@supabase/supabase-js"
 
 interface topbarProps {
   title: string
@@ -9,13 +10,17 @@ interface topbarProps {
   onAiToggle: () => void
   onDelete: () => void
   hasNote: boolean
+  session: Session | null
 }
 
-export function Topbar({ title, updatedAt, aiOpen, onAiToggle, onDelete, hasNote }: topbarProps) {
+export function Topbar({ title, updatedAt, aiOpen, onAiToggle, onDelete, hasNote, session }: topbarProps) {
   async function handleLogin() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
     })
+  }
+  async function handleLogout() {
+    await supabase.auth.signOut()
   }
   return (
     <header className="topbar">
@@ -42,13 +47,15 @@ export function Topbar({ title, updatedAt, aiOpen, onAiToggle, onDelete, hasNote
           🗑
         </button>}
 
-      <button className="topbar-auth-btn" >
-        ログアウト
-      </button>
-
-      <button className="topbar-auth-btn login" >
-        Googleでログイン
-      </button>
+      {session ? (
+        <button className="topbar-auth-btn" onClick={handleLogout} >
+          ログアウト
+        </button>
+      ) : (
+        <button className="topbar-auth-btn login" onClick={handleLogin} >
+          Googleでログイン
+        </button>
+      )}
 
     </header>
   )

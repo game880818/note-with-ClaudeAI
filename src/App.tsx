@@ -3,10 +3,15 @@
 //   → aiOpen を Topbar・AiPanel に渡す
 
 import type { Note } from './Types'
+
 import { Sidebar } from './Components/Sidebar'
 import { Topbar } from './Components/Topbar'
 import { Editor } from './Components/Editor'
 import { AiPanel } from './Components/AiPanel'
+
+import supabase from '../lib/supabase'
+import type { Session } from '@supabase/supabase-js'
+
 import { useCallback, useEffect, useState } from 'react'
 
 // 画面確認用のダミーデータ
@@ -32,11 +37,17 @@ const SEED: Note[] = [
 ]
 
 export default function App() {
+  // ログイン状態を管理する state
+  const [session, setSession] = useState<Session | null>(null)
+
+  // ノートを管理する state
   const [notes, setNotes] = useState<Note[]>(() => {
     const saved = localStorage.getItem('notes')
     // 選択しているノートを返す　
     return saved ? JSON.parse(saved) as Note[] : SEED
   })
+
+  // 選択しているノートを管理する state
   const [activeId, setActiveId] = useState<string | null>(() => {
     const saved = localStorage.getItem('notes')
     const savedNotes = saved ? JSON.parse(saved) as Note[] : SEED
@@ -44,9 +55,25 @@ export default function App() {
     return savedNotes[0]?.id ?? null
   })
 
+  // AI パネルの開閉状態を管理する state
   const [aiOpen, setAiOpen] = useState(true)
 
+  // 選択しているノートを返す
   const activeNote = notes.find(item => item.id === activeId) ?? null
+
+  useEffect(() => {
+    // 即座に session を取得 → ボタンの遅延がなくなる
+    supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
+
+    // ログイン状態が変化したときの処理
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log(_event, session)
+      setSession(session)
+    })
+
+    // クリーンアップ
+    return () => data.subscription.unsubscribe()
+  }, [])
 
   // notes を localStorage に保存 & notes が変化したときのみ再実行
   useEffect(() => {
@@ -107,6 +134,7 @@ export default function App() {
         onAiToggle={() => setAiOpen(status => !status)}
         onDelete={() => activeId && handleDelete(activeId)}
         hasNote={activeNote !== null}
+        session={session}
       />
 
       {/* Editor or empty state */}
