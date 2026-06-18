@@ -8,9 +8,29 @@ interface sidebarProps {
   handleNew: () => void
 }
 
+import supabase from "../../lib/supabase"
+
 export function Sidebar({ notes, activeId, handleSelect, handleNew }: sidebarProps) {
   const [searchText, setSearchText] = useState<string>('')
   const [activeTag, setActiveTag] = useState<string | null>(null)
+
+  async function addNoteTest() {
+    const { data: { user } } = await supabase.auth.getUser()
+    console.log(user?.id)
+    await supabase.from('notes').insert({
+      user_id: user?.id,
+      title: 'テスト',
+      content: 'テスト内容',
+    })
+    console.log('作成完了');
+  }
+  async function readNoteTest() {
+    const { data, error } = await supabase
+      .from('notes')
+      .select('*')
+
+    console.log(data, error, '取得完了');
+  }
 
   // 全てのタグを取得　（重複を排除）
   // 1. 全てのタグを展開して 2. Map で重複を排除する 3.values() で値を取得する 4. Array.from() でイテレータという特殊な状態を配列に変換する
@@ -99,6 +119,16 @@ export function Sidebar({ notes, activeId, handleSelect, handleNew }: sidebarPro
       <div className="sidebar-foot">
         <button className="btn-new" onClick={handleNew}>
           ＋ 新しいノートを作成
+        </button>
+      </div>
+      <div className="sidebar-foot">
+        <button className="btn-new" onClick={addNoteTest}>
+          ＋ テスト用ノートを作成
+        </button>
+      </div>
+      <div className="sidebar-foot">
+        <button className="btn-new" onClick={readNoteTest}>
+          ＋ テスト用ノートを取得する
         </button>
       </div>
 
