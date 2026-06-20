@@ -15,26 +15,18 @@ import type { Session } from '@supabase/supabase-js'
 import { useCallback, useEffect, useState } from 'react'
 
 // 画面確認用のダミーデータ
-const SEED: Note[] = [
+/*const SEED: Note[] = [
   {
     id: '1',
     title: 'JLPT N3 — 文法まとめ',
     content: '〜ているところ：進行中の動作\n例：今、勉強しているところです。',
     tags: [{ label: '日本語', color: 'pink' }],
-    stripeColor: '#F2A7B0',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    title: 'React hooks まとめ',
-    content: 'useEffect・useState・useCallback',
-    tags: [{ label: '技術', color: 'mint' }, { label: 'ウェブ', color: 'pink' }],
-    stripeColor: '#8FD0BA',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-]
+    stripe_color: '#F2A7B0',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+] */
+
 
 export default function App() {
   // ログイン状態を管理する state
@@ -57,6 +49,7 @@ export default function App() {
   // エラーを管理する state
   const [error, setError] = useState<Error | null>(null)
 
+  // ログイン状態を取得する useEffect
   useEffect(() => {
     // 即座に session を取得 → ボタンの遅延がなくなる
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
@@ -100,20 +93,28 @@ export default function App() {
   }, [])
 
 
-
   // 新しいノートを作成するときの処理
-  function handleNew() {
-    const newNote = {
-      id: Date.now().toString(),
-      title: '',
-      content: '',
-      tags: [],
-      stripeColor: '#F2A7B0',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+  async function handleNew() {
+    const { data: newNoteData, error } = await supabase
+      .from('notes')
+      .insert({
+        user_id: session?.user?.id,
+        title: '',
+        content: '',
+        tags: [],
+        stripe_color: '#F2A7B0',
+      })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error inserting note:', error)
+      setError(error)
+      return
     }
-    setNotes([newNote, ...notes])
-    setActiveId(newNote.id)
+    // 成功時処理
+    setNotes([newNoteData, ...notes])
+    setActiveId(newNoteData.id)
   }
 
   function handleDelete(id: string) {
@@ -166,7 +167,7 @@ export default function App() {
       />
       <Topbar
         title={activeNote?.title ?? ''}
-        updatedAt={activeNote?.updatedAt ?? ''}
+        updatedAt={activeNote?.updated_at ?? ''}
         aiOpen={aiOpen}
         onAiToggle={() => setAiOpen(status => !status)}
         onDelete={() => activeId && handleDelete(activeId)}

@@ -12,9 +12,9 @@ export interface Note {
   title: string
   content: string
   tags: Tag[]
-  stripeColor: string  // サイドバーの左カラーライン
-  createdAt: string    // ISO string
-  updatedAt: string    // ISO string
+  stripe_color: string  // サイドバーの左カラーライン
+  created_at: string    // ISO string
+  updated_at: string    // ISO string
 }
 
 // 結果カードの型
