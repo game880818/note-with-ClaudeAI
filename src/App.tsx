@@ -66,7 +66,7 @@ export default function App() {
 
   // notes を supabase から取得する useEffect
   useEffect(() => {
-    async function getSavedNotes() {
+    async function fetchSavedNotes() {
       // ロード中を表示 & エラーをリセット
       setLoading(true)
       setError(null)
@@ -89,12 +89,32 @@ export default function App() {
       setNotes(data ?? [])
       setActiveId(data?.[0]?.id ?? null)
     }
-    getSavedNotes()
+    fetchSavedNotes()
   }, [])
 
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      const { error } = await supabase.from('notes')
+        .update({
+          title: activeNote?.title,
+          content: activeNote?.content,
+          tags: activeNote?.tags,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', activeId)
+
+      if (error) {
+        console.error('Error updating note:', error)
+        setError(error)
+      }
+    }, 1000)
+
+    return () => clearTimeout(timer)
+  }, [activeNote?.title, activeNote?.content, activeNote?.tags])
 
   // 新しいノートを作成するときの処理
   async function handleNew() {
+    // 新しいノートを作成
     const { data: newNoteData, error } = await supabase
       .from('notes')
       .insert({
@@ -107,6 +127,7 @@ export default function App() {
       .select()
       .single()
 
+    // エラーを処理
     if (error) {
       console.error('Error inserting note:', error)
       setError(error)
@@ -137,12 +158,12 @@ export default function App() {
     setActiveId(newNotes[0]?.id ?? null)
   }
 
-  // ノートを更新するときの処理
+  // フロントエンドのノートを更新するときの処理
   // useCallback で memo化する activeId が変化したときのみ再実行
   const handleChange = useCallback((field: Partial<Note>) => {
     setNotes((prevNotes) => {
       // 選択しているノートを探し出し、更新
-      const newNotes = prevNotes.map(note => note.id === activeId ? { ...note, ...field, updatedAt: new Date().toISOString() } : note)
+      const newNotes = prevNotes.map(note => note.id === activeId ? { ...note, ...field, updated_at: new Date().toISOString() } : note)
       return newNotes
     })
   }, [activeId])
@@ -159,14 +180,14 @@ export default function App() {
   }
 
   // エラーを表示
-  if (error) {
-    return (
-      <div className="app-error">
-        <p>データの読み込みに失敗しました</p>
-        <button onClick={() => window.location.reload()}>再試行</button>
-      </div>
-    )
-  }
+  // if (error) {
+  //   return (
+  //     <div className="app-error">
+  //       <p>データの読み込みに失敗しました</p>
+  //       <button onClick={() => window.location.reload()}>再試行</button>
+  //     </div>
+  //   )
+  // }
 
   return (
     <div className="app">

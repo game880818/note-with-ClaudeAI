@@ -14,14 +14,19 @@ interface topbarProps {
 }
 
 export function Topbar({ title, updatedAt, aiOpen, onAiToggle, onDelete, hasNote, session }: topbarProps) {
+
+  // Google ログインボタンを押したときの処理
   async function handleLogin() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
     })
   }
+  // ログアウトボタンを押したときの処理
   async function handleLogout() {
     await supabase.auth.signOut()
+    window.location.reload()
   }
+
   return (
     <header className="topbar">
 
