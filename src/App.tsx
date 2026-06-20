@@ -41,25 +41,21 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null)
 
   // ノートを管理する state
-  const [notes, setNotes] = useState<Note[]>(() => {
-    const saved = localStorage.getItem('notes')
-    // 選択しているノートを返す　
-    return saved ? JSON.parse(saved) as Note[] : SEED
-  })
+  const [notes, setNotes] = useState<Note[]>([])
 
   // 選択しているノートを管理する state
-  const [activeId, setActiveId] = useState<string | null>(() => {
-    const saved = localStorage.getItem('notes')
-    const savedNotes = saved ? JSON.parse(saved) as Note[] : SEED
-    // arrayが空の場合は null を返す
-    return savedNotes[0]?.id ?? null
-  })
+  const [activeId, setActiveId] = useState<string | null>(null)
 
   // AI パネルの開閉状態を管理する state
   const [aiOpen, setAiOpen] = useState(true)
 
   // 選択しているノートを返す
   const activeNote = notes.find(item => item.id === activeId) ?? null
+
+  // ロード中を管理する state
+  const [loading, setLoading] = useState(false)
+  // エラーを管理する state
+  const [error, setError] = useState<Error | null>(null)
 
   useEffect(() => {
     // 即座に session を取得 → ボタンの遅延がなくなる
@@ -75,10 +71,35 @@ export default function App() {
     return () => data.subscription.unsubscribe()
   }, [])
 
-  // notes を localStorage に保存 & notes が変化したときのみ再実行
+  // notes を supabase から取得する useEffect
   useEffect(() => {
-    localStorage.setItem('notes', JSON.stringify(notes))
-  }, [notes])
+    async function getSavedNotes() {
+      // ロード中を表示 & エラーをリセット
+      setLoading(true)
+      setError(null)
+
+      // notes を取得
+      const { data, error } = await supabase
+        .from('notes')
+        .select()
+        .order('updated_at', { ascending: false })
+
+      // エラーを処理
+      if (error) {
+        console.error('Error fetching notes:', error)
+        setLoading(false)
+        setError(error)
+        return
+      }
+      // 成功時処理
+      setLoading(false)
+      setNotes(data ?? [])
+      setActiveId(data?.[0]?.id ?? null)
+    }
+    getSavedNotes()
+  }, [])
+
+
 
   // 新しいノートを作成するときの処理
   function handleNew() {
@@ -117,6 +138,22 @@ export default function App() {
   // Sidebar からノートを選択したときの処理
   function handleSelect(id: string) {
     setActiveId(id)
+  }
+
+  // ── return Component ────────────────────────────────────────────────────────────────
+  // ロード中を表示
+  if (loading) {
+    return <div className="app-loading"><p>読み込み中...</p></div>
+  }
+
+  // エラーを表示
+  if (error) {
+    return (
+      <div className="app-error">
+        <p>データの読み込みに失敗しました</p>
+        <button onClick={() => window.location.reload()}>再試行</button>
+      </div>
+    )
   }
 
   return (

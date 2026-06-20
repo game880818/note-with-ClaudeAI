@@ -19,8 +19,8 @@ export function Sidebar({ notes, activeId, handleSelect, handleNew }: sidebarPro
     console.log(user?.id)
     await supabase.from('notes').insert({
       user_id: user?.id,
-      title: 'テスト',
-      content: 'テスト内容',
+      title: 'テスト1',
+      content: 'テスト内容1',
     })
     console.log('作成完了');
   }

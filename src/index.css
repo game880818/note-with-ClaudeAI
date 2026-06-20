@@ -90,6 +90,33 @@ body {
   height: 100vh;
 }
 
+/* ── Page Loading & Error ──────────────────────────────────────────────────────────── */
+.app-loading,
+.app-error {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: var(--cream);
+  color: var(--ink-3, #6B5D54);
+  font-size: 14px;
+}
+
+.app-error button {
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--paper);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.app-error button:hover {
+  background: var(--paper-hover);
+}
+
 /* ══ SIDEBAR ══════════════════════════════════════════════════════════════════ */
 .sidebar {
   grid-area: sidebar;
