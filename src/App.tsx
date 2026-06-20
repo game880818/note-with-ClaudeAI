@@ -117,10 +117,21 @@ export default function App() {
     setActiveId(newNoteData.id)
   }
 
-  function handleDelete(id: string) {
+  // ノートを削除するときの処理
+  async function handleDelete(id: string) {
     // 確認ダイアログを出す
     if (!window.confirm('このノートを削除しますか？')) return
-    // 削除
+
+    // データベースの削除
+    const { error } = await supabase.from('notes').delete().eq('id', id)
+
+    if (error) {
+      console.error('Error deleting note:', error)
+      setError(error)
+      return
+    }
+
+    // フロントエンドの削除
     const newNotes = notes.filter(note => note.id !== id)
     setNotes(newNotes)
     setActiveId(newNotes[0]?.id ?? null)
