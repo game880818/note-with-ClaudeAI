@@ -6,6 +6,8 @@ const PROMPT: Record<string, (text: string) => string> = {
 }
 
 Deno.serve(async (req) => {
+  
+  // CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
       headers: {
@@ -15,6 +17,7 @@ Deno.serve(async (req) => {
     })
   }
 
+  // 要求を解析する
   try {
     const { action, text } = await req.json()
 
@@ -31,6 +34,8 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Claude API を呼び出す
+    // apikey を取得する
     const apiKey = Deno.env.get('ANTHROPIC_API_KEY')
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {

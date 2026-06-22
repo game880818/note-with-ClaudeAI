@@ -1,45 +1,27 @@
-import axios from 'axios'
+import supabase from '../../lib/supabase'
 // AI が実行できるアクションの種類
 export type AiActionType = 'translate-jp' | 'translate-en' | 'summerize' | 'grammer'
 
 // 各アクションのプロンプト
-const PROMPT: Record<AiActionType, (text: string) => string> = {
-  'translate-jp': (text) => `日本語に翻訳してください：${text}`,
-  'translate-en': (text) => `英語に翻訳してください：${text}`,
-  'summerize': (text) => `要約してください：${text}`,
-  'grammer': (text) => `文法をチェックしてください：${text}`,
-}
+// const PROMPT: Record<AiActionType, (text: string) => string> = {
+//   'translate-jp': (text) => `日本語に翻訳してください：${text}`,
+//   'translate-en': (text) => `英語に翻訳してください：${text}`,
+//   'summerize': (text) => `要約してください：${text}`,
+//   'grammer': (text) => `文法をチェックしてください：${text}`,
+// }
 
 // Claude API を呼び出す関数
 export async function getAiResponse(action: AiActionType, text: string): Promise<string> {
   if (!text.trim()) throw new Error('ノートに内容を入力してください')
+  
+  //  Supabase 関数を呼び出す
+  const { data, error } = await supabase.functions.invoke('ai-action', {
+    body: { action, text },
+  })
+  console.log(data, error)
 
-  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY as string
-  // https://api.anthropic.com/v1/messages
-  // /api/claude/v1/messages
-  const { data } = await axios.post('https://api.anthropic.com/v1/messages',
-    {
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
-      messages: [
-        {
-          role: 'user',
-          content: PROMPT[action](text)
-        }
-      ]
-    },
-    {
-      headers: {
-        'X-Api-Key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'Content-Type': 'application/json',
-        // ブラウザから直接 API を叩くことを許可する
-        'anthropic-dangerous-direct-browser-access': 'true'
-      }
-    }
-  )
-
-  return data.content[0]?.text ?? ''
+  if (error) throw new Error(error.message)
+  return data.text ?? ''
 }
 
 
