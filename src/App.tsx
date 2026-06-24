@@ -66,6 +66,8 @@ export default function App() {
 
   // notes を supabase から取得する useEffect
   useEffect(() => {
+    if (!session) return         // 未ログインなら何もしない
+
     async function fetchSavedNotes() {
       // ロード中を表示 & エラーをリセット
       setLoading(true)
@@ -92,6 +94,7 @@ export default function App() {
     fetchSavedNotes()
   }, [])
 
+  // ノートを更新する useEffect
   useEffect(() => {
     if (!activeId) return        // activeId が null なら何もしない
     if (!session) return         // 未ログインなら何もしない
