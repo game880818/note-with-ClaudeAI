@@ -93,6 +93,9 @@ export default function App() {
   }, [])
 
   useEffect(() => {
+    if (!activeId) return        // activeId が null なら何もしない
+    if (!session) return         // 未ログインなら何もしない
+
     const timer = setTimeout(async () => {
       const { error } = await supabase.from('notes')
         .update({
