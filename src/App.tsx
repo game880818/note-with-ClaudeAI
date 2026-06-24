@@ -120,6 +120,8 @@ export default function App() {
 
   // 新しいノートを作成するときの処理
   async function handleNew() {
+    if (!session) return         // 未ログインなら何もしない
+
     // 新しいノートを作成
     const { data: newNoteData, error } = await supabase
       .from('notes')
