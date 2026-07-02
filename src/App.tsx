@@ -91,8 +91,11 @@ export default function App() {
       setNotes(data ?? [])
       setActiveId(data?.[0]?.id ?? null)
     }
+    console.log("start");
+
     fetchSavedNotes()
-  }, [])
+    // sessionがあるかどうかを確認
+  }, [session?.user?.id])
 
   // ノートを更新する useEffect
   useEffect(() => {
