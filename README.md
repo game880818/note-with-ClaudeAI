@@ -40,7 +40,10 @@
   - 📋 ノート内容の要約
   - ✏️ 文法チェック
 - 🕓 **AI 実行履歴** — 直近 5 件の結果をパネルに表示
-- 💾 **自動保存** — `localStorage` によるデータ永続化
+- 🔐 **Google 認証（Supabase Auth）** — Google アカウントでログイン／ログアウト、ユーザーごとにノートを分離管理
+- ☁️ **クラウド同期・永続化（Supabase / PostgreSQL）** — ノートはデータベースに保存され、複数端末間でリアルタイムに同期
+- 💾 **自動保存（デバウンス方式）** — 入力後 1 秒間操作がなければ自動的に Supabase へ保存、無駄な API 呼び出しを削減
+- 🛡️ **セキュアな AI 連携（Supabase Edge Functions）** — Anthropic API キーをフロントエンドから排除し、サーバーサイド（Edge Function）経由で安全に呼び出し
 
 ---
 
@@ -50,28 +53,37 @@
 |---|---|
 | フロントエンド | React 18 / TypeScript / Vite |
 | UI ライブラリ | react-markdown |
+| 認証・DB・BaaS | Supabase（Auth / PostgreSQL / Edge Functions） |
+| サーバーレス関数 | Supabase Edge Functions（Deno ランタイム） |
 | HTTP クライアント | Axios |
-| AI | Anthropic Claude API（`claude-sonnet-4-6`）|
-| データ永続化 | localStorage |
-| デプロイ | Vercel |
+| AI | Anthropic Claude API（`claude-sonnet-4-6`、Edge Function 経由で呼び出し）|
+| データ永続化 | Supabase（PostgreSQL） |
+| デプロイ | Vercel（フロントエンド）／ Supabase（バックエンド） |
 
 ---
 
 ## 🏗️ ディレクトリ構成
 
 ```
-src/
-├── Components/
-│   ├── Sidebar.tsx      # ノート一覧・検索・タグフィルター
-│   ├── Topbar.tsx       # タイトル入力・タグ管理
-│   ├── Editor.tsx       # ノート本文エディター
-│   └── AiPanel.tsx      # AI 機能パネル・実行履歴
-├── utils/
-│   ├── ai.ts            # Claude API 連携処理
-│   └── formalTime.tsx   # 日時フォーマット処理
-├── Types/
-│   └── index.ts         # Note / Tag / AiResult 型定義
-└── App.tsx              # ルート状態管理
+├── lib/
+│   └── supabase.ts      # Supabase クライアント初期化
+├── supabase/
+│   ├── config.toml       # Supabase プロジェクト設定
+│   └── functions/
+│       └── ai-action/
+│           └── index.ts  # AI 呼び出し用 Edge Function（APIキーをサーバー側で保持）
+└── src/
+    ├── Components/
+    │   ├── Sidebar.tsx    # ノート一覧・検索・タグフィルター
+    │   ├── Topbar.tsx     # タイトル入力・タグ管理・Google ログイン／ログアウト
+    │   ├── Editor.tsx     # ノート本文エディター
+    │   └── AiPanel.tsx    # AI 機能パネル・実行履歴
+    ├── utils/
+    │   ├── ai.ts          # supabase.functions.invoke() 経由での AI 呼び出し処理
+    │   └── formalTime.tsx # 日時フォーマット処理
+    ├── Types/
+    │   └── index.ts       # Note / Tag / AiResult 型定義
+    └── App.tsx             # ルート状態管理・認証状態管理・DB CRUD 処理
 ```
 
 ---
@@ -84,6 +96,10 @@ src/
 - **TypeScript による厳密な型管理** — `Note` / `Tag` / `AiResult` の独自型を定義し、API レスポンスから UI まで一貫した型安全性を確保
 - **AI 結果履歴の上限管理** — 新しい結果を先頭に追加し `.slice(0, 5)` で最新 5 件に制限
 - **タグカラーの自動循環** — モジュロ演算（`COLOR_CYCLE[tags.length % COLOR_CYCLE.length]`）で色を自動割り当て
+- **Google OAuth 認証フロー** — `supabase.auth.signInWithOAuth` と `onAuthStateChange` を用いてログイン状態をリアルタイムに監視し、セッションを `App` の state として一元管理
+- **認証状態とデータ取得の同期（競合状態の解消）** — ノート取得用 `useEffect` の依存配列に `session` を追加し、Supabase のセッション初期化が完了する前にノート取得が走ってしまう競合状態（race condition）を解消
+- **デバウンスによる自動保存** — `setTimeout` と `clearTimeout` を組み合わせ、入力が 1 秒間止まったタイミングでのみ Supabase へ `update` を実行し、DB 書き込み回数を抑制
+- **API キーの完全サーバーサイド化** — Anthropic API キーをフロントエンドの環境変数から排除し、Supabase Edge Function（Deno）内の環境変数として保持することで、キーの漏洩リスクを解消
 
 ---
 
@@ -92,7 +108,9 @@ src/
 ### 事前準備
 
 - Node.js v18 以上
-- [Anthropic API キー](https://console.anthropic.com/)
+- [Supabase アカウント](https://supabase.com/) ＆ プロジェクト作成
+- Supabase 上で Google OAuth プロバイダーの設定（Google Cloud Console でのクライアントID発行を含む）
+- [Anthropic API キー](https://console.anthropic.com/)（Edge Function の環境変数として設定）
 
 ### インストール
 
@@ -104,8 +122,18 @@ cd note-with-ClaudeAI
 # 依存パッケージをインストール
 npm install
 
-# 環境変数を設定
-echo "VITE_ANTHROPIC_API_KEY=your_api_key_here" > .env
+# フロントエンド用環境変数を設定
+cat <<EOF > .env
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key
+EOF
+
+# Edge Function 側の環境変数（Anthropic API キー）は
+# Supabase ダッシュボード、または Supabase CLI で設定
+# 例：supabase secrets set ANTHROPIC_API_KEY=your_api_key_here
+
+# Edge Function をデプロイ（初回のみ）
+supabase functions deploy ai-action
 
 # 開発サーバーを起動
 npm run dev
@@ -115,13 +143,12 @@ npm run dev
 
 ## 🔮 今後の改善予定
 
-- [✅] supabase(バックエンド・DB 連携)による複数端末同期
+- [ ] レスポンシブ対応
+- [✅] バックエンド・DB 連携による複数端末同期
 - [✅] ユーザー認証（マルチユーザー対応）
 - [✅] API キーのバックエンド移行（セキュリティ強化）
-- [ ] レスポンシブ対応
 - [ ] AI レスポンスのストリーミング表示
 - [ ] ノートの Markdown / PDF エクスポート
 - [ ] AI による自動タグ提案
-- [ ] AI による
 
 ---
